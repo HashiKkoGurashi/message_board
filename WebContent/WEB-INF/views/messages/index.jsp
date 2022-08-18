@@ -7,7 +7,9 @@
                 <c:out value="${flush}"></c:out>
             </div>
         </c:if>
+
         <h2>メッセージ一覧</h2>
+
         <ul>
             <c:forEach var="message" items="${messages}">
                 <li>
@@ -18,6 +20,22 @@
                 </li>
             </c:forEach>
         </ul>
+
+        <div id="pagination">
+            （全 ${messages_count} 件）<br />
+            <c:forEach var="i" begin="1" end="${((message_count-1)/15) + 1}" step="1">
+                <c:choose>
+                    <c:when test="${i == page}">
+                       <c:out value="${i}" /> &nbsp;
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/index?page=${i}"><c:out value="${i}" /></a>&nbsp;
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+        </div>
+
         <p><a href = "${pageContext.request.contextPath}/new">新規メッセージの投稿</a></p>
+
     </c:param>
  </c:import>
