@@ -2,8 +2,10 @@ package controllers;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import models.Message;
+import models.validators.MessageValidator;
 import utils.DBUtil;
 
 @WebServlet("/create")
@@ -43,11 +46,27 @@ public class CreateServlet extends HttpServlet {
             m.setCreated_at(currentTime);
             m.setUpdated_at(currentTime);
 
-            em.persist(m);
-            em.getTransaction().commit();
-            request.getSession().setAttribute("flush", "登録が完了しました");
-            em.close();
-            response.sendRedirect(request.getContextPath() + "/index");
+            //バリデーションを実行し、エラーがあったら新規登録ページに戻る
+            List<String> errors = MessageValidator.validate(m);
+            if(errors.size()>0) {
+                em.close();
+
+                //エラーメッセージを送る ＆ フォームに初期値を設定
+                request.setAttribute("errors", errors);
+                request.setAttribute("message", m);
+                request.setAttribute("_token", request.getSession().getId());
+
+                RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/new.jsp");
+                rd.forward(request, response);
+            } else {
+                //バリデーションエラーがなければ、データベース処理を実行
+                em.persist(m);
+                em.getTransaction().commit();
+                request.getSession().setAttribute("flush", "登録が完了しました");
+                em.close();
+                //一覧ページにリダイレクト
+                response.sendRedirect(request.getContextPath() + "/index");
+            }
         }
     }
 
